@@ -7,12 +7,14 @@ import { QuantResultCard } from "@/components/quant-result-card"
 interface QuantResult {
   stockName: string
   businessModel?: string
+  beginnerChecklist?: Array<{ title: string; description: string }>
   totalScore: number
   valueScore: number
   growthScore: number
   safetyScore: number
   insight: string
   recommendation: "buy" | "hold" | "sell"
+  isDataMissing?: boolean
 }
 
 // Mock data for demonstration
@@ -20,6 +22,11 @@ const mockResults: Record<string, QuantResult> = {
   "삼성전자": {
     stockName: "삼성전자",
     businessModel: "반도체·가전 등을 팔아 전 세계에 제품을 공급하며 돈을 법니다",
+    beginnerChecklist: [
+      { title: "비즈니스가 단순한가?", description: "반도체와 가전 같은 제품을 만들어 팔아 돈을 버는 구조라 이해하기 쉽습니다." },
+      { title: "성장성에 비해 주가가 싼가?", description: "성장 대비 가격은 숫자를 함께 보고 판단해야 합니다. (예시 데이터)" },
+      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채 지표를 확인해 불황에서도 버틸 힘이 있는지 봅니다. (예시 데이터)" },
+    ],
     totalScore: 82,
     valueScore: 78,
     growthScore: 85,
@@ -30,6 +37,11 @@ const mockResults: Record<string, QuantResult> = {
   "애플": {
     stockName: "Apple Inc.",
     businessModel: "아이폰 같은 기기와 앱·구독 서비스를 팔아 돈을 법니다",
+    beginnerChecklist: [
+      { title: "비즈니스가 단순한가?", description: "기기 판매와 서비스 구독으로 돈을 버는 구조입니다." },
+      { title: "성장성에 비해 주가가 싼가?", description: "성장 속도 대비 주가가 과한지 숫자로 확인합니다." },
+      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채를 비교해 위기에도 흔들리지 않는지 봅니다." },
+    ],
     totalScore: 88,
     valueScore: 72,
     growthScore: 91,
@@ -40,6 +52,11 @@ const mockResults: Record<string, QuantResult> = {
   "테슬라": {
     stockName: "Tesla Inc.",
     businessModel: "전기차와 에너지 제품을 팔고, 소프트웨어로 추가 수익을 냅니다",
+    beginnerChecklist: [
+      { title: "비즈니스가 단순한가?", description: "전기차·에너지 제품을 팔고 소프트웨어로 추가 수익을 냅니다." },
+      { title: "성장성에 비해 주가가 싼가?", description: "성장 기대가 큰 만큼 가격이 이미 비싼지 숫자로 확인합니다." },
+      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채 수준을 보고 불황에도 버틸 체력이 있는지 봅니다." },
+    ],
     totalScore: 65,
     valueScore: 45,
     growthScore: 89,
@@ -50,6 +67,11 @@ const mockResults: Record<string, QuantResult> = {
   "카카오": {
     stockName: "카카오",
     businessModel: "메신저 기반 광고·콘텐츠·결제 서비스로 돈을 법니다",
+    beginnerChecklist: [
+      { title: "비즈니스가 단순한가?", description: "광고·콘텐츠·결제 같은 서비스를 통해 수익을 냅니다." },
+      { title: "성장성에 비해 주가가 싼가?", description: "성장 지표 대비 가격이 매력적인지 숫자로 확인합니다." },
+      { title: "불황을 버틸 현금이 있는가?", description: "단기 유동성과 부채를 확인해 버틸 힘을 봅니다." },
+    ],
     totalScore: 58,
     valueScore: 68,
     growthScore: 52,
@@ -60,6 +82,11 @@ const mockResults: Record<string, QuantResult> = {
   "네이버": {
     stockName: "NAVER",
     businessModel: "검색·광고와 커머스·콘텐츠·클라우드로 돈을 법니다",
+    beginnerChecklist: [
+      { title: "비즈니스가 단순한가?", description: "검색·광고를 중심으로 여러 서비스에서 수익을 냅니다." },
+      { title: "성장성에 비해 주가가 싼가?", description: "성장률과 PER 같은 숫자를 같이 보고 판단합니다." },
+      { title: "불황을 버틸 현금이 있는가?", description: "현금과 부채를 비교해 위기 대응력을 봅니다." },
+    ],
     totalScore: 75,
     valueScore: 71,
     growthScore: 78,
@@ -137,12 +164,14 @@ export default function Home() {
       const quantResult: QuantResult = {
         stockName: data.stockName,
         businessModel: data.businessModel,
+        beginnerChecklist: data.beginnerChecklist,
         totalScore: data.totalScore,
         valueScore: data.valueScore,
         growthScore: data.growthScore,
         safetyScore: data.safetyScore,
         insight: data.insight,
         recommendation: data.recommendation,
+        isDataMissing: data.isDataMissing,
       }
 
       setResult(quantResult)

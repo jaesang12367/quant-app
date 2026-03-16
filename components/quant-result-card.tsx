@@ -1,16 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { TrendingUp, Shield, Gem } from "lucide-react"
 
 interface QuantResult {
   stockName: string
   businessModel?: string
+  beginnerChecklist?: Array<{ title: string; description: string }>
   totalScore: number
   valueScore: number
   growthScore: number
   safetyScore: number
   insight: string
   recommendation: "buy" | "hold" | "sell"
+  isDataMissing?: boolean
 }
 
 interface QuantResultCardProps {
@@ -54,6 +57,9 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
   const scoreGradient = getScoreGradient(result.totalScore)
   const borderColor = getBorderColor(result.totalScore)
   const indicatorEmoji = getIndicatorEmoji(result.recommendation)
+  const [isChecklistOpen, setIsChecklistOpen] = useState(false)
+  const checklist = result.beginnerChecklist ?? []
+  const isDataMissing = result.isDataMissing
 
   return (
     <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -78,67 +84,116 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
         </div>
 
         {/* Total Score */}
-        <div className="text-center mb-10">
-          <div className="relative inline-block">
-            <span 
-              className={`text-8xl font-bold bg-gradient-to-br ${scoreGradient} 
-                          bg-clip-text text-transparent tracking-tighter`}
-            >
-              {result.totalScore}
-            </span>
-            <span className="absolute -top-1 -right-6 text-lg font-medium text-muted-foreground">
-              점
-            </span>
+        {!isDataMissing && (
+          <div className="text-center mb-10">
+            <div className="relative inline-block">
+              <span 
+                className={`text-8xl font-bold bg-gradient-to-br ${scoreGradient} 
+                            bg-clip-text text-transparent tracking-tighter`}
+              >
+                {result.totalScore}
+              </span>
+              <span className="absolute -top-1 -right-6 text-lg font-medium text-muted-foreground">
+                점
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              퀀트 종합 점수
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            퀀트 종합 점수
-          </p>
-        </div>
+        )}
 
         {/* Three Metrics */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <MetricItem 
-            icon={<Gem className="w-5 h-5" />}
-            label="가성비"
-            score={result.valueScore}
-          />
-          <MetricItem 
-            icon={<TrendingUp className="w-5 h-5" />}
-            label="성장성"
-            score={result.growthScore}
-          />
-          <MetricItem 
-            icon={<Shield className="w-5 h-5" />}
-            label="안전성"
-            score={result.safetyScore}
-          />
-        </div>
+        {!isDataMissing && (
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <MetricItem 
+              icon={<Gem className="w-5 h-5" />}
+              label="가성비"
+              score={result.valueScore}
+            />
+            <MetricItem 
+              icon={<TrendingUp className="w-5 h-5" />}
+              label="성장성"
+              score={result.growthScore}
+            />
+            <MetricItem 
+              icon={<Shield className="w-5 h-5" />}
+              label="안전성"
+              score={result.safetyScore}
+            />
+          </div>
+        )}
 
         {/* Finance term tooltips (minimal) */}
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-8 text-xs text-muted-foreground">
-          <TermTooltip term="PER" description="PER: 투자금 회수 기간" />
-          <TermTooltip term="PBR" description="PBR: 순자산 대비 가격" />
-          <TermTooltip term="ROE" description="ROE: 내 돈을 굴리는 수익률" />
-          <TermTooltip term="부채비율" description="부채비율: 빚이 자본에 비해 얼마나?" />
-          <TermTooltip term="유동비율" description="유동비율: 단기 빚 갚을 여력" />
+        {!isDataMissing && (
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-8 text-xs text-muted-foreground">
+            <TermTooltip term="PER" description="PER: 투자금 회수 기간" />
+            <TermTooltip term="PBR" description="PBR: 순자산 대비 가격" />
+            <TermTooltip term="ROE" description="ROE: 내 돈을 굴리는 수익률" />
+            <TermTooltip term="부채비율" description="부채비율: 빚이 자본에 비해 얼마나?" />
+            <TermTooltip term="유동비율" description="유동비율: 단기 빚 갚을 여력" />
+          </div>
+        )}
+
+        {/* AI Insight or data-missing message */}
+        <div className="bg-muted/50 rounded-2xl p-5">
+          <div className="flex flex-col gap-2">
+            {isDataMissing ? (
+              <p className="text-center text-sm text-muted-foreground leading-relaxed">
+                죄송합니다. 해당 종목의 실시간 재무 데이터를 확보하지 못해 분석을 진행할 수 없습니다.
+                티커를 다시 확인한 뒤, 잠시 후 다시 시도해 주세요.
+              </p>
+            ) : (
+              result.insight.split("\n").map((line, i, arr) => (
+                <p
+                  key={i}
+                  className={`text-foreground/90 leading-relaxed
+                    ${i === 0 ? "text-center font-semibold text-base" : "text-sm text-foreground/75"}
+                    ${i === arr.length - 1 ? "text-center font-medium" : ""}
+                  `}
+                >
+                  {line}
+                </p>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* AI Insight */}
-        <div className="bg-muted/50 rounded-2xl p-5">
-  <div className="flex flex-col gap-2">
-    {result.insight.split("\n").map((line, i) => (
-      <p
-        key={i}
-        className={`text-foreground/90 leading-relaxed
-          ${i === 0 ? "text-center font-semibold text-base" : "text-sm text-foreground/75"}
-          ${i === result.insight.split("\n").length - 1 ? "text-center font-medium" : ""}
-        `}
-      >
-        {line}
-      </p>
-    ))}
-  </div>
-</div>
+        {/* Peter Lynch beginner checklist drawer */}
+        {!isDataMissing && checklist.length > 0 ? (
+          <div className="mt-10">
+            <button
+              type="button"
+              onClick={() => setIsChecklistOpen((v) => !v)}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground
+                         transition-colors duration-200"
+              aria-expanded={isChecklistOpen}
+            >
+              {isChecklistOpen
+                ? "− 주식 초보자를 위한 피터 린치 체크리스트 닫기"
+                : "+ 주식 초보자를 위한 피터 린치 체크리스트 보기"}
+            </button>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-out ${
+                isChecklistOpen ? "max-h-96 opacity-100 mt-6" : "max-h-0 opacity-0 mt-0"
+              }`}
+            >
+              <div className="space-y-6">
+                {checklist.slice(0, 3).map((item, idx) => (
+                  <div key={idx} className="text-left">
+                    <div className="text-sm font-medium text-foreground tracking-tight">
+                      {item.title}
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Reset Button */}
