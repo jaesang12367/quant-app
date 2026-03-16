@@ -8,6 +8,7 @@ const CLAUDE_MAX_TOKENS = 700
 
 interface QuantApiResponse {
   stockName: string
+  businessModel: string
   totalScore: number
   valueScore: number
   growthScore: number
@@ -113,13 +114,14 @@ async function callClaude(stockName: string, symbol: string, financialData: unkn
     "특히 한국 주식의 경우 야후 파이낸스에서 부채비율(debtToEquity)이나 특정 데이터가 누락되어 null로 들어오는 경우가 있어. " +
     "만약 특정 데이터가 없다면, 그 지표가 문제라는 식의 부정적인 언급이나 짐작을 절대 하지 마. " +
     "있는 데이터만 가지고 피터 린치 스타일로 장점을 분석해.\n\n" +
+    "추가로, 해당 기업이 정확히 무엇을 팔아서 어떻게 돈을 버는지 초등학생도 이해할 수 있는 아주 직관적이고 쉬운 1줄짜리 비즈니스 모델 요약을 작성해.\n\n" +
     "출력은 0~100점 종합 점수와 아래 형식의 4줄 평을 JSON으로 반환해.\n\n" +
 "verdict 형식 (줄바꿈 \\n으로 구분):\n" +
 "1줄: 신호등 이모지 + 핵심 결론 한 문장\n" +
 "2줄: 긍정 포인트 (데이터에 있는 숫자 포함)\n" +
 "3줄: 리스크 또는 주의사항\n" +
 "4줄: 투자 액션 제안\n\n" +
-    '{ "stockName": string, "totalScore": number, "valueScore": number, "growthScore": number, "safetyScore": number, "verdict": string }\n\n' +
+    '{ "stockName": string, "businessModel": string, "totalScore": number, "valueScore": number, "growthScore": number, "safetyScore": number, "verdict": string }\n\n' +
     "JSON 이외의 설명/코드블록/텍스트는 절대 쓰지 말 것."
   const userContent = `분석 대상 종목: ${stockName} (${symbol})\n\n아래는 Yahoo Finance에서 가져온 재무 데이터이다.\n\n${JSON.stringify(financialData)}`
   const anthropic = new Anthropic({ apiKey })
@@ -136,6 +138,7 @@ async function callClaude(stockName: string, symbol: string, financialData: unkn
   try { parsed = JSON.parse(cleaned) } catch { throw new Error("Claude가 올바른 JSON을 반환하지 않았습니다.") }
   return {
     stockName: parsed.stockName ?? stockName,
+    businessModel: String(parsed.businessModel ?? ""),
     totalScore: Number(parsed.totalScore ?? 0),
     valueScore: Number(parsed.valueScore ?? 0),
     growthScore: Number(parsed.growthScore ?? 0),

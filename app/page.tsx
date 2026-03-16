@@ -6,6 +6,7 @@ import { QuantResultCard } from "@/components/quant-result-card"
 
 interface QuantResult {
   stockName: string
+  businessModel?: string
   totalScore: number
   valueScore: number
   growthScore: number
@@ -18,6 +19,7 @@ interface QuantResult {
 const mockResults: Record<string, QuantResult> = {
   "삼성전자": {
     stockName: "삼성전자",
+    businessModel: "반도체·가전 등을 팔아 전 세계에 제품을 공급하며 돈을 법니다",
     totalScore: 82,
     valueScore: 78,
     growthScore: 85,
@@ -27,6 +29,7 @@ const mockResults: Record<string, QuantResult> = {
   },
   "애플": {
     stockName: "Apple Inc.",
+    businessModel: "아이폰 같은 기기와 앱·구독 서비스를 팔아 돈을 법니다",
     totalScore: 88,
     valueScore: 72,
     growthScore: 91,
@@ -36,6 +39,7 @@ const mockResults: Record<string, QuantResult> = {
   },
   "테슬라": {
     stockName: "Tesla Inc.",
+    businessModel: "전기차와 에너지 제품을 팔고, 소프트웨어로 추가 수익을 냅니다",
     totalScore: 65,
     valueScore: 45,
     growthScore: 89,
@@ -45,6 +49,7 @@ const mockResults: Record<string, QuantResult> = {
   },
   "카카오": {
     stockName: "카카오",
+    businessModel: "메신저 기반 광고·콘텐츠·결제 서비스로 돈을 법니다",
     totalScore: 58,
     valueScore: 68,
     growthScore: 52,
@@ -54,6 +59,7 @@ const mockResults: Record<string, QuantResult> = {
   },
   "네이버": {
     stockName: "NAVER",
+    businessModel: "검색·광고와 커머스·콘텐츠·클라우드로 돈을 법니다",
     totalScore: 75,
     valueScore: 71,
     growthScore: 78,
@@ -130,6 +136,7 @@ export default function Home() {
       const data = await res.json()
       const quantResult: QuantResult = {
         stockName: data.stockName,
+        businessModel: data.businessModel,
         totalScore: data.totalScore,
         valueScore: data.valueScore,
         growthScore: data.growthScore,
