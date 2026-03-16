@@ -3,8 +3,12 @@
 import { useState } from "react"
 import { TrendingUp, Shield, Gem } from "lucide-react"
 
+import { toPng } from "html-to-image"
+import { useRef } from "react"
+
 interface QuantResult {
   stockName: string
+  symbol?: string  // 이 줄 추가
   businessModel?: string
   beginnerChecklist?: Array<{ title: string; description: string }>
   totalScore: number
@@ -58,6 +62,29 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
   const borderColor = getBorderColor(result.totalScore)
   const indicatorEmoji = getIndicatorEmoji(result.recommendation)
   const [isChecklistOpen, setIsChecklistOpen] = useState(false)
+
+  const cardRef = useRef<HTMLDivElement>(null)
+
+
+  const handleCapture = async () => {
+    if (!cardRef.current) return
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        style: {
+          borderRadius: "24px",
+        },
+      })
+      const link = document.createElement("a")
+      link.download = `${result.stockName}_퀀트분석.png`
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      alert("이미지 저장에 실패했습니다. 다시 시도해주세요.")
+    }
+  }
+
   const checklist = result.beginnerChecklist ?? []
   const isDataMissing = result.isDataMissing
 
@@ -65,8 +92,7 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
     <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Main Card */}
       <div 
-        className={`bg-card rounded-3xl border-2 ${borderColor} p-8 shadow-sm
-                    transition-all duration-300 hover:shadow-md`}
+        ref={cardRef} className={`bg-card rounded-3xl border-2 ${borderColor} p-8 shadow-sm ...`}
       >
         {/* Stock Name */}
         <div className="text-center mb-8">
@@ -106,20 +132,23 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
         {/* Three Metrics */}
         {!isDataMissing && (
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <MetricItem 
+            <MetricItem
               icon={<Gem className="w-5 h-5" />}
               label="가성비"
               score={result.valueScore}
+              description="PER·PBR 기준으로 현재 주가가 기업 가치 대비 얼마나 저렴한지를 나타내요."
             />
-            <MetricItem 
+            <MetricItem
               icon={<TrendingUp className="w-5 h-5" />}
               label="성장성"
               score={result.growthScore}
+              description="매출·이익 성장률과 ROE를 기준으로 기업이 얼마나 빠르게 커가고 있는지를 나타내요."
             />
-            <MetricItem 
+            <MetricItem
               icon={<Shield className="w-5 h-5" />}
               label="안전성"
               score={result.safetyScore}
+              description="부채비율·유동비율을 기준으로 불황에도 버틸 수 있는 재무 체력을 나타내요."
             />
           </div>
         )}
@@ -196,14 +225,47 @@ export function QuantResultCard({ result, onReset }: QuantResultCardProps) {
         ) : null}
       </div>
 
-      {/* Reset Button */}
+      {/* 하단 버튼 영역 */}
+      <div className="flex flex-col gap-2 mt-6">
+        {/* 이미지 저장 */}
+        <button
+          onClick={handleCapture}
+          className="w-full py-3.5 text-sm font-medium text-foreground
+           bg-muted/70 rounded-2xl hover:bg-muted
+           transition-all duration-200"
+        >
+          📸 이미지로 저장하기
+        </button>
+
+     {/* 토스증권 */}
+        {!isDataMissing && (
+          <a
+          href={(() => {
+            const symbol = result.symbol ?? ""
+            const krMatch = symbol.match(/^(\d{6})\.(KS|KQ)$/i)
+            if (krMatch) return `https://www.tossinvest.com/stocks/A${krMatch[1]}/order`
+            return `https://www.tossinvest.com/stocks/${symbol}/order`
+          })()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-3.5 text-sm font-medium text-white
+                    bg-[#3182F6] rounded-2xl hover:bg-[#1B64DA]
+                    transition-all duration-200 flex items-center justify-center"
+        >
+          🔵 토스증권에서 매수하기
+        </a>
+      )}
+
+      {/* 다른 종목 */}
       <button
         onClick={onReset}
-        className="w-full mt-6 py-3 text-sm font-medium text-muted-foreground
-                   hover:text-foreground transition-colors duration-200"
+        className="w-full py-3.5 text-sm font-medium text-muted-foreground
+           hover:text-foreground border border-muted rounded-2xl
+           hover:border-foreground/20 transition-all duration-200"
       >
-        다른 종목 분석하기
+        🔍 다른 종목 분석하기
       </button>
+    </div>
     </div>
   )
 }
@@ -212,19 +274,32 @@ interface MetricItemProps {
   icon: React.ReactNode
   label: string
   score: number
+  description: string
 }
 
-function MetricItem({ icon, label, score }: MetricItemProps) {
+function MetricItem({ icon, label, score, description }: MetricItemProps) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30">
-      <div className="text-muted-foreground">
-        {icon}
+    <div
+      className={`flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 cursor-pointer
+                  transition-all duration-200 hover:bg-muted/50 select-none
+                  ${open ? "ring-1 ring-foreground/10" : ""}`}
+      onClick={() => setOpen((v) => !v)}
+    >
+      <div className="text-muted-foreground">{icon}</div>
+      <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      <span className="text-lg font-semibold text-foreground">{score}</span>
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out w-full
+                    ${open ? "max-h-24 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+      >
+        <p className="text-xs text-muted-foreground leading-relaxed text-center">
+          {description}
+        </p>
       </div>
-      <span className="text-xs text-muted-foreground font-medium">
-        {label}
-      </span>
-      <span className="text-lg font-semibold text-foreground">
-        {score}
+      <span className="text-xs text-muted-foreground/50">
+        {open ? "▲" : "▼"}
       </span>
     </div>
   )

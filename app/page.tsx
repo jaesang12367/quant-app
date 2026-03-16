@@ -6,6 +6,7 @@ import { QuantResultCard } from "@/components/quant-result-card"
 
 interface QuantResult {
   stockName: string
+  symbol?: string  // 이 줄 추가
   businessModel?: string
   beginnerChecklist?: Array<{ title: string; description: string }>
   totalScore: number
@@ -163,6 +164,7 @@ export default function Home() {
       const data = await res.json()
       const quantResult: QuantResult = {
         stockName: data.stockName,
+        symbol: data.symbol,  // 이 줄 추가
         businessModel: data.businessModel,
         beginnerChecklist: data.beginnerChecklist,
         totalScore: data.totalScore,

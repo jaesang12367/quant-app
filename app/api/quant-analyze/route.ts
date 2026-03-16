@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
 
       const stockName = name !== symbol ? name : resolvedName
       const aiResult = await callClaude(stockName, symbol, { symbol, stockName, ...data })
-      return NextResponse.json({ ...aiResult, stockName })
+      return NextResponse.json({ ...aiResult, stockName, symbol })
     } catch (err: any) {
       console.error("Yahoo Finance 연동 실패, Claude 단독 분석으로 폴백합니다.", err)
       const aiResult = await callClaude(query, query, {
