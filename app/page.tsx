@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { StockSearch } from "@/components/stock-search"
+import { Search } from "lucide-react"
 import { QuantResultCard } from "@/components/quant-result-card"
 
 interface QuantResult {
   stockName: string
-  symbol?: string  // 이 줄 추가
+  symbol?: string
   businessModel?: string
   beginnerChecklist?: Array<{ title: string; description: string }>
   totalScore: number
@@ -18,153 +18,36 @@ interface QuantResult {
   isDataMissing?: boolean
 }
 
-// Mock data for demonstration
-const mockResults: Record<string, QuantResult> = {
-  "삼성전자": {
-    stockName: "삼성전자",
-    businessModel: "반도체·가전 등을 팔아 전 세계에 제품을 공급하며 돈을 법니다",
-    beginnerChecklist: [
-      { title: "비즈니스가 단순한가?", description: "반도체와 가전 같은 제품을 만들어 팔아 돈을 버는 구조라 이해하기 쉽습니다." },
-      { title: "성장성에 비해 주가가 싼가?", description: "성장 대비 가격은 숫자를 함께 보고 판단해야 합니다. (예시 데이터)" },
-      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채 지표를 확인해 불황에서도 버틸 힘이 있는지 봅니다. (예시 데이터)" },
-    ],
-    totalScore: 82,
-    valueScore: 78,
-    growthScore: 85,
-    safetyScore: 83,
-    insight: "반도체 업황 개선과 견고한 재무구조로 장기 투자에 적합합니다",
-    recommendation: "buy"
-  },
-  "애플": {
-    stockName: "Apple Inc.",
-    businessModel: "아이폰 같은 기기와 앱·구독 서비스를 팔아 돈을 법니다",
-    beginnerChecklist: [
-      { title: "비즈니스가 단순한가?", description: "기기 판매와 서비스 구독으로 돈을 버는 구조입니다." },
-      { title: "성장성에 비해 주가가 싼가?", description: "성장 속도 대비 주가가 과한지 숫자로 확인합니다." },
-      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채를 비교해 위기에도 흔들리지 않는지 봅니다." },
-    ],
-    totalScore: 88,
-    valueScore: 72,
-    growthScore: 91,
-    safetyScore: 94,
-    insight: "프리미엄 밸류에이션이지만 탁월한 성장성과 안정성을 보유하고 있습니다",
-    recommendation: "buy"
-  },
-  "테슬라": {
-    stockName: "Tesla Inc.",
-    businessModel: "전기차와 에너지 제품을 팔고, 소프트웨어로 추가 수익을 냅니다",
-    beginnerChecklist: [
-      { title: "비즈니스가 단순한가?", description: "전기차·에너지 제품을 팔고 소프트웨어로 추가 수익을 냅니다." },
-      { title: "성장성에 비해 주가가 싼가?", description: "성장 기대가 큰 만큼 가격이 이미 비싼지 숫자로 확인합니다." },
-      { title: "불황을 버틸 현금이 있는가?", description: "현금·부채 수준을 보고 불황에도 버틸 체력이 있는지 봅니다." },
-    ],
-    totalScore: 65,
-    valueScore: 45,
-    growthScore: 89,
-    safetyScore: 52,
-    insight: "높은 성장 잠재력이 있으나 변동성이 크므로 신중한 접근이 필요합니다",
-    recommendation: "hold"
-  },
-  "카카오": {
-    stockName: "카카오",
-    businessModel: "메신저 기반 광고·콘텐츠·결제 서비스로 돈을 법니다",
-    beginnerChecklist: [
-      { title: "비즈니스가 단순한가?", description: "광고·콘텐츠·결제 같은 서비스를 통해 수익을 냅니다." },
-      { title: "성장성에 비해 주가가 싼가?", description: "성장 지표 대비 가격이 매력적인지 숫자로 확인합니다." },
-      { title: "불황을 버틸 현금이 있는가?", description: "단기 유동성과 부채를 확인해 버틸 힘을 봅니다." },
-    ],
-    totalScore: 58,
-    valueScore: 68,
-    growthScore: 52,
-    safetyScore: 55,
-    insight: "현재 밸류에이션은 매력적이나 성장 모멘텀 회복이 필요합니다",
-    recommendation: "hold"
-  },
-  "네이버": {
-    stockName: "NAVER",
-    businessModel: "검색·광고와 커머스·콘텐츠·클라우드로 돈을 법니다",
-    beginnerChecklist: [
-      { title: "비즈니스가 단순한가?", description: "검색·광고를 중심으로 여러 서비스에서 수익을 냅니다." },
-      { title: "성장성에 비해 주가가 싼가?", description: "성장률과 PER 같은 숫자를 같이 보고 판단합니다." },
-      { title: "불황을 버틸 현금이 있는가?", description: "현금과 부채를 비교해 위기 대응력을 봅니다." },
-    ],
-    totalScore: 75,
-    valueScore: 71,
-    growthScore: 78,
-    safetyScore: 76,
-    insight: "AI 사업 확장과 안정적인 광고 수익으로 균형 잡힌 투자처입니다",
-    recommendation: "buy"
-  }
-}
-
-function getRandomResult(query: string): QuantResult {
-  // Check if we have mock data for this query
-  const normalizedQuery = query.toLowerCase()
-  for (const [key, value] of Object.entries(mockResults)) {
-    if (key.toLowerCase().includes(normalizedQuery) || normalizedQuery.includes(key.toLowerCase())) {
-      return value
-    }
-  }
-  
-  // Generate random result for unknown stocks
-  const totalScore = Math.floor(Math.random() * 60) + 30
-  const valueScore = Math.floor(Math.random() * 50) + 40
-  const growthScore = Math.floor(Math.random() * 50) + 40
-  const safetyScore = Math.floor(Math.random() * 50) + 40
-  
-  let insight: string
-  let recommendation: "buy" | "hold" | "sell"
-  
-  if (totalScore >= 70) {
-    insight = "전반적으로 양호한 퀀트 지표를 보여 투자 매력도가 높습니다"
-    recommendation = "buy"
-  } else if (totalScore >= 50) {
-    insight = "현재 가격대에서 관망하며 추가 분석이 권장됩니다"
-    recommendation = "hold"
-  } else {
-    insight = "현재 퀀트 지표가 부정적이므로 투자에 주의가 필요합니다"
-    recommendation = "sell"
-  }
-  
-  return {
-    stockName: query,
-    totalScore,
-    valueScore,
-    growthScore,
-    safetyScore,
-    insight,
-    recommendation
-  }
-}
+const MOCK_STOCKS = [
+  { id: 1, name: "허브스팟", ticker: "HUBS", score: 92, bgColor: "bg-[#FFECE8]", dotColor: "bg-[#00C805]" },
+  { id: 2, name: "서브 로보틱스", ticker: "SERV", score: 68, bgColor: "bg-[#FFF3E0]", dotColor: "bg-[#FFB900]" },
+  { id: 3, name: "삼성전자", ticker: "005930.KS", score: 78, bgColor: "bg-[#F4ECFF]", dotColor: "bg-[#00C805]" },
+]
 
 export default function Home() {
+  const [query, setQuery] = useState("")
   const [result, setResult] = useState<QuantResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return
     try {
       setIsLoading(true)
       setResult(null)
-
       const res = await fetch("/api/quant-analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery }),
       })
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        const message = data?.error ?? "알 수 없는 오류가 발생했습니다."
-        alert(message)
+        alert(data?.error ?? "알 수 없는 오류가 발생했습니다.")
         return
       }
-
       const data = await res.json()
-      const quantResult: QuantResult = {
+      setResult({
         stockName: data.stockName,
-        symbol: data.symbol,  // 이 줄 추가
+        symbol: data.symbol,
         businessModel: data.businessModel,
         beginnerChecklist: data.beginnerChecklist,
         totalScore: data.totalScore,
@@ -174,65 +57,98 @@ export default function Home() {
         insight: data.insight,
         recommendation: data.recommendation,
         isDataMissing: data.isDataMissing,
-      }
-
-      setResult(quantResult)
-    } catch (error) {
-      console.error(error)
+      })
+    } catch {
       alert("퀀트 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleSearch(query)
+  }
+
   const handleReset = () => {
     setResult(null)
+    setQuery("")
+  }
+
+  if (result) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center px-6">
+        <QuantResultCard result={result} onReset={handleReset} />
+      </div>
+    )
   }
 
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
-      {!result ? (
-        // Search View
-        <div className="flex flex-col items-center gap-8 w-full animate-in fade-in duration-500">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight mb-3">
-              분석할 종목의 이름을 입력하세요.
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              AI가 퀀트 지표를 분석해 드립니다
-            </p>
-          </div>
-          
-          <StockSearch onSearch={handleSearch} isLoading={isLoading} />
-          
-          {isLoading && (
-            <div className="flex items-center gap-3 text-muted-foreground animate-pulse">
-              <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          )}
-          
-          {/* Example stocks */}
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {["삼성전자", "애플", "테슬라", "네이버"].map((stock) => (
-              <button
-                key={stock}
-                onClick={() => handleSearch(stock)}
-                disabled={isLoading}
-                className="px-4 py-2 text-sm text-muted-foreground bg-muted/50 
-                         rounded-full hover:bg-muted hover:text-foreground
-                         transition-all duration-200 disabled:opacity-50"
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center pt-20 px-6 font-sans">
+      <div className="w-full max-w-md flex flex-col h-full">
+
+        {/* 헤더 로고 */}
+        <div className="text-xl font-serif font-bold text-gray-900 mb-6 tracking-tight">
+          Daily Quant.
+        </div>
+
+        {/* 메인 타이틀 */}
+        <h1 className="text-[2.75rem] font-extrabold text-gray-900 leading-[1.15] tracking-tight mb-10">
+          분석하고 싶은<br />
+          기업을<br />
+          검색하세요
+        </h1>
+
+        {/* 검색창 */}
+        <div className="w-full mb-8">
+          <form
+            onSubmit={handleFormSubmit}
+            className="flex items-center bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-4 border border-gray-50"
+          >
+            <Search className="w-6 h-6 text-gray-400 mr-3" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="삼성전자, 팔란티어, 또는 티커 입력"
+              className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400 text-lg"
+              disabled={isLoading}
+            />
+            {isLoading && (
+              <div className="flex items-center gap-1 ml-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* 오늘의 퀀트 발견 */}
+        <div className="bg-white rounded-[2rem] p-7 shadow-sm border border-gray-100 flex-1 mb-8">
+          <h2 className="text-sm font-bold text-gray-500 mb-5 tracking-wide">
+            [오늘의 퀀트 발견]
+          </h2>
+          <div className="flex flex-col space-y-3">
+            {MOCK_STOCKS.map((stock) => (
+              <div
+                key={stock.id}
+                onClick={() => handleSearch(stock.ticker)}
+                className={`flex justify-between items-center p-4 rounded-2xl ${stock.bgColor} cursor-pointer hover:opacity-80 transition-opacity`}
               >
-                {stock}
-              </button>
+                <span className="font-bold text-gray-900 text-lg">
+                  {stock.name} ({stock.ticker})
+                </span>
+                <div className="flex items-center">
+                  <span className={`w-3 h-3 rounded-full ${stock.dotColor} mr-2 shadow-sm`}></span>
+                  <span className="font-bold text-gray-900">{stock.score}점</span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      ) : (
-        // Result View
-        <QuantResultCard result={result} onReset={handleReset} />
-      )}
-    </main>
+
+      </div>
+    </div>
   )
 }
